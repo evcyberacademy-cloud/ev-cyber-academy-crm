@@ -1,7 +1,11 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Central Supabase Cloud Project Configuration (EV Cyber Academy)
+const supabaseUrl =
+  import.meta.env.VITE_SUPABASE_URL || 'https://otyujnykypxqfiawryse.supabase.co';
+const supabaseAnonKey =
+  import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  'sb_publishable_5Q5PlGPQu19NlZnd1OY2lg_auGTBNT6';
 
 export const isSupabaseConfigured = (): boolean => {
   return (
@@ -14,23 +18,17 @@ export const isSupabaseConfigured = (): boolean => {
   );
 };
 
-// Create the Supabase client if configured, or a dummy client if pending setup
-export const supabase: SupabaseClient = isSupabaseConfigured()
-  ? createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-      },
-      realtime: {
-        params: {
-          eventsPerSecond: 10,
-        },
-      },
-    })
-  : createClient('https://placeholder.supabase.co', 'placeholder-anon-key', {
-      auth: {
-        persistSession: false,
-      },
-    });
+// Central Supabase Client with Realtime WebSocket support
+export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 10,
+    },
+  },
+});
 
 export { supabaseUrl, supabaseAnonKey };

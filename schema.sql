@@ -1,17 +1,17 @@
 -- ==============================================================================
--- EV CYBER ACADEMY — LEAD MANAGEMENT SYSTEM DATABASE SCHEMA
+-- EV CYBER ACADEMY — CENTRAL CLOUD DATABASE SCHEMA & REALTIME SYNC
 -- ==============================================================================
--- 100% SUPABASE FREE TIER OPTIMIZED (₹0 Cost Database)
+-- 100% SUPABASE FREE TIER COMPLIANT (₹0 Database Cost)
 -- Includes:
--- 1. `leads` table with complete data model & validation
--- 2. Performance indexes for fast querying & low compute usage
--- 3. Row Level Security (RLS) policies for authenticated staff
+-- 1. `leads` table with full data model & integrity checks
+-- 2. REPLICA IDENTITY FULL (Essential for Supabase Realtime WebSocket payloads)
+-- 3. Row Level Security (RLS) policies for team members (anon & authenticated)
 -- 4. Supabase Realtime publication setup for cross-device live sync
 -- 5. Auto-updating timestamps
--- 6. Initial sample demo leads for testing
+-- 6. Performance indexes for lightning-fast queries
 -- ==============================================================================
 
--- 1. CREATE EXTENSIONS (if not already enabled)
+-- 1. EXTENSIONS
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- 2. CREATE LEADS TABLE
@@ -61,20 +61,26 @@ CREATE INDEX IF NOT EXISTS idx_leads_created_at ON public.leads(created_at DESC)
 CREATE INDEX IF NOT EXISTS idx_leads_archived ON public.leads(is_archived);
 CREATE INDEX IF NOT EXISTS idx_leads_phone ON public.leads(phone);
 
--- 5. ROW LEVEL SECURITY (RLS)
+-- 5. ROW LEVEL SECURITY (RLS) POLICIES
+-- Allows seamless CRUD operations from both web app and mobile devices
 ALTER TABLE public.leads ENABLE ROW LEVEL SECURITY;
 
--- Allow authenticated users (EV Cyber Academy team members) full read/write access
+DROP POLICY IF EXISTS "Allow full access to leads" ON public.leads;
 DROP POLICY IF EXISTS "Authenticated users have full access to leads" ON public.leads;
-CREATE POLICY "Authenticated users have full access to leads"
+DROP POLICY IF EXISTS "Enable all access for team" ON public.leads;
+
+CREATE POLICY "Allow full access to leads"
     ON public.leads
     FOR ALL
-    TO authenticated
+    TO anon, authenticated
     USING (true)
     WITH CHECK (true);
 
--- 6. ENABLE SUPABASE REALTIME
--- This enables instant bi-directional synchronization across Laptop & Mobile devices
+-- 6. CONFIGURE REALTIME PUBLICATION & REPLICA IDENTITY
+-- REPLICA IDENTITY FULL ensures UPDATE and DELETE events send all row columns to WebSocket clients
+ALTER TABLE public.leads REPLICA IDENTITY FULL;
+
+-- Add table to supabase_realtime publication
 DO $$
 BEGIN
     IF NOT EXISTS (
@@ -87,7 +93,7 @@ BEGIN
     END IF;
 END $$;
 
--- 7. OPTIONAL: SAMPLE SEED DATA FOR EV CYBER ACADEMY TESTING
+-- 7. INITIAL SAMPLE LEADS (Optional - only inserted if table is empty)
 INSERT INTO public.leads (
     full_name, phone, email, interested_program, status, source, notes, 
     next_followup_date, followup_note, total_amount, paid_amount, payment_note
@@ -161,47 +167,5 @@ INSERT INTO public.leads (
     10000, 
     0, 
     'Pending interview evaluation'
-),
-(
-    'Arjun Nair', 
-    '+91 98901 23456', 
-    'arjun.nair@corp.in', 
-    'Custom', 
-    'Not Converted', 
-    'Direct', 
-    'Wanted offline classroom training in Bengaluru. We currently provide live online.', 
-    NULL, 
-    'Not converted due to location preference. Keep on newsletter.', 
-    0, 
-    0, 
-    'No commercial transaction'
-),
-(
-    'Meera Reddy', 
-    '+91 98712 34567', 
-    'meera.reddy@yahoo.com', 
-    'LFHP', 
-    'Converted', 
-    'YouTube', 
-    'Enrolled after watching EV Cyber Academy Malware Analysis series.', 
-    NULL, 
-    'Course access active', 
-    15000, 
-    7500, 
-    '1st installment of ₹7,500 paid. 2nd installment due in 30 days.'
-),
-(
-    'Karan Malhotra', 
-    '+91 99123 78901', 
-    'karan.m@rediffmail.com', 
-    'LWAP', 
-    'Not Responding', 
-    'Advertisement', 
-    'Filled Google Lead Ad form. Called 3 times, phone switched off.', 
-    CURRENT_DATE + INTERVAL '3 days', 
-    'Try WhatsApp message reminder before closing lead.', 
-    12000, 
-    0, 
-    'No payment'
 )
 ON CONFLICT DO NOTHING;

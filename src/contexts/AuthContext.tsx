@@ -1,12 +1,11 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  isMockMode: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -14,31 +13,13 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const MOCK_USER_STORAGE_KEY = 'ev_crm_mock_user';
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const isMockMode = !isSupabaseConfigured();
 
   useEffect(() => {
-    if (!isSupabaseConfigured()) {
-      // Mock mode: check local storage for demo session
-      const savedMockUser = localStorage.getItem(MOCK_USER_STORAGE_KEY);
-      if (savedMockUser) {
-        try {
-          const parsed = JSON.parse(savedMockUser);
-          setUser(parsed);
-        } catch {
-          localStorage.removeItem(MOCK_USER_STORAGE_KEY);
-        }
-      }
-      setLoading(false);
-      return;
-    }
-
-    // Real Supabase Auth mode
+    // 1. Get initial session
     const getInitialSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -53,6 +34,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     getInitialSession();
 
+    // 2. Listen to auth state changes across tabs / devices
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
@@ -67,31 +49,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signIn = async (email: string, password: string): Promise<{ error: Error | null }> => {
-    if (!isSupabaseConfigured()) {
-      // Mock authentication
-      if (email && password.length >= 6) {
-        const mockUser: any = {
-          id: 'mock-user-admin-01',
-          email: email.trim(),
-          role: 'authenticated',
-          app_metadata: { provider: 'email' },
-          user_metadata: { name: 'EV Cyber Academy Admin' },
-          created_at: new Date().toISOString(),
-        };
-        localStorage.setItem(MOCK_USER_STORAGE_KEY, JSON.stringify(mockUser));
-        setUser(mockUser);
-        return { error: null };
-      } else {
-        return { error: new Error('Please provide a valid email and password (minimum 6 characters)') };
-      }
-    }
-
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       });
       if (error) throw error;
+      setSession(data.session);
+      setUser(data.user);
       return { error: null };
     } catch (err: any) {
       return { error: err };
@@ -99,16 +64,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signUp = async (email: string, password: string): Promise<{ error: Error | null }> => {
-    if (!isSupabaseConfigured()) {
-      return signIn(email, password);
-    }
-
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: email.trim(),
         password,
       });
       if (error) throw error;
+      setSession(data.session);
+      setUser(data.user);
       return { error: null };
     } catch (err: any) {
       return { error: err };
@@ -116,12 +79,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async (): Promise<void> => {
-    if (!isSupabaseConfigured()) {
-      localStorage.removeItem(MOCK_USER_STORAGE_KEY);
-      setUser(null);
-      return;
-    }
-
     try {
       await supabase.auth.signOut();
     } catch (err) {
@@ -138,7 +95,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         session,
         loading,
-        isMockMode,
         signIn,
         signUp,
         signOut,
