@@ -60,18 +60,18 @@ export type LeadUpdate = Partial<LeadInsert>;
 export interface LeadFormData {
   full_name: string;
   phone: string;
-  email: string;
   interested_program: string;
-  custom_program: string;
   status: LeadStatus;
   source: string;
-  custom_source: string;
-  notes: string;
-  next_followup_date: string;
-  followup_note: string;
-  total_amount: number;
-  paid_amount: number;
-  payment_note: string;
+  next_followup_date?: string;
+  notes?: string;
+  email?: string;
+  custom_program?: string;
+  custom_source?: string;
+  followup_note?: string;
+  total_amount?: number;
+  paid_amount?: number;
+  payment_note?: string;
 }
 
 export type FollowupFilterType = 'all' | 'today' | 'upcoming' | 'overdue' | 'none';

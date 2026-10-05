@@ -1,11 +1,16 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useLeads } from '../../contexts/LeadsContext';
-import { PROGRAM_OPTIONS, STATUS_OPTIONS, SOURCE_OPTIONS } from '../../lib/constants';
-import { Search, X, Filter, RotateCcw, Calendar, Archive } from 'lucide-react';
+import { STATUS_OPTIONS, SOURCE_OPTIONS } from '../../lib/constants';
+import { getAllProgramOptions } from '../../lib/programs';
+import { Search, X, RotateCcw, Calendar, Archive } from 'lucide-react';
 import { FollowupFilterType } from '../../types/database';
 
 export const LeadFilters: React.FC = () => {
   const { filterState, setFilterState, stats, leads } = useLeads();
+
+  const availablePrograms = useMemo(() => {
+    return getAllProgramOptions(leads.map((l) => l.interested_program));
+  }, [leads]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFilterState((prev) => ({ ...prev, search: e.target.value }));
@@ -63,7 +68,7 @@ export const LeadFilters: React.FC = () => {
           </div>
           <input
             type="text"
-            placeholder="Search leads by name, phone, email, or notes..."
+            placeholder="Search leads by name, phone, or notes..."
             value={filterState.search}
             onChange={handleSearchChange}
             className="w-full pl-9 pr-8 py-2 rounded-lg text-sm border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors"
@@ -122,7 +127,7 @@ export const LeadFilters: React.FC = () => {
             className="w-full py-1.5 px-2.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-500"
           >
             <option value="ALL">All Programs</option>
-            {PROGRAM_OPTIONS.map((prog) => (
+            {availablePrograms.map((prog) => (
               <option key={prog} value={prog}>
                 {prog}
               </option>
