@@ -29,6 +29,12 @@ interface LeadsContextType {
 
 const LeadsContext = createContext<LeadsContextType | undefined>(undefined);
 
+// Helper to validate UUID format
+const isValidUUID = (id?: string | null): boolean => {
+  if (!id || typeof id !== 'string') return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+};
+
 // Helper to normalize and compute pending_amount
 const processLeadRecord = (raw: any): Lead => {
   const total = Number(raw.total_amount) || 0;
@@ -308,7 +314,7 @@ export const LeadsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         paid_amount: Number(data.paid_amount) || 0,
         payment_note: data.payment_note.trim() || null,
         is_archived: false,
-        user_id: user?.id || null,
+        user_id: isValidUUID(user?.id) ? user!.id : null,
       };
 
       const { data: inserted, error: insertError } = await supabase
@@ -341,6 +347,10 @@ export const LeadsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         updated_at: new Date().toISOString(),
       };
       delete payload.pending_amount;
+
+      if ('user_id' in payload && !isValidUUID(payload.user_id)) {
+        payload.user_id = null;
+      }
 
       const { error: updateError } = await supabase
         .from('leads')
@@ -451,7 +461,7 @@ export const LeadsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const total = Number(item.total_amount) || 0;
         const paid = Number(item.paid_amount) || 0;
         return {
-          id: item.id && item.id.length === 36 ? item.id : undefined, // Keep valid UUIDs or let PostgreSQL generate
+          id: isValidUUID(item.id) ? item.id : undefined, // Keep valid UUIDs or let PostgreSQL generate
           full_name: String(item.full_name || 'Unnamed Lead').trim(),
           phone: String(item.phone || '').trim(),
           email: item.email ? String(item.email).trim() : null,
@@ -469,7 +479,7 @@ export const LeadsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           is_archived: Boolean(item.is_archived),
           created_at: item.created_at || now,
           updated_at: now,
-          user_id: user?.id || null,
+          user_id: isValidUUID(item.user_id) ? item.user_id : (isValidUUID(user?.id) ? user!.id : null),
         };
       });
 
