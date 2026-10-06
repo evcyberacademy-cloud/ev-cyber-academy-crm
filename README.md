@@ -26,19 +26,21 @@ This application is strictly engineered to operate at **₹0/month** database an
 
 ## 🚀 Key Features & Capabilities
 
-1. **Clean Corporate EdTech UI**: High-contrast Dark mode and clean Light mode. No hacker graphics, neon distractions, or matrix rain.
-2. **Real-Time Cross-Device Sync**: Any lead created or updated on a laptop immediately reflects on mobile screens without requiring page refreshes using **Supabase Realtime (`postgres_changes`)**.
-3. **Executive Dashboard**:
-   * 10 Real-time summary metric cards: *Total Leads, New Leads, Contacted, Follow-up, Interested, Converted, Not Converted, Not Responding, Follow-ups Today, Overdue Follow-ups*.
-   * Dynamic Conversion Rate meter: `Converted Leads / Total Leads × 100` calculated automatically.
-   * Revenue, collected fee, and pending fee aggregates.
-4. **Comprehensive Lead Model**:
-   * Basic Info: Full Name, Phone, Email, Interested Program, Status, Source, Internal Discussion Notes.
-   * Program Taxonomy: `LFHP`, `LFHP Mini`, `LWAP`, `AI Cyber Tool Building Workshop`, `Internship`, and `Custom` (with custom name input).
-   * Source Taxonomy: `Instagram`, `WhatsApp`, `Website`, `Referral`, `Webinar`, `Advertisement`, `YouTube`, `Direct`, and `Other` (with custom source input).
-5. **Fee Ledger & Automatic Pending Calculation**:
-   * Total Course Fee (₹) and Paid Amount (₹).
-   * **Pending Amount** is calculated dynamically in real-time (`Total Fee - Paid Amount`), with negative value prevention.
+1. **Streamlined High-Impact Dashboard**:
+   * Clean 3-Command Metrics focus: **Total Revenue** (with Collected & Pending balance), **Total Leads** (with New enquiries and Converted rates), and **Pending Follow-ups** (with Due Today & Overdue alerts).
+   * Direct Action Center: Urgent Follow-ups quick action queue (with 1-click Call & WhatsApp shortcuts) and Recent Leads activity feed.
+   * Completely configurable widgets with zero clutter.
+2. **A-to-Z Settings Engine**:
+   * **Organization & Brand Identity**: Custom academy name, tagline, currency symbol/code (`₹`, `$`, `€`, `£`, etc.), and support details.
+   * **Dashboard Customizer**: Toggle any card, metric, or chart ON/OFF + custom welcome banner headlines.
+   * **Programs & Offerings Catalog**: Add, edit, remove courses with default tuition fees.
+   * **Lead Acquisition Channels**: Manage sources dynamically.
+   * **Pipeline Stages & Follow-up Rules**: Customize stages, intervals (+1d, +3d, +7d), and note templates.
+   * **Appearance & Display**: Dark Mode, Light Mode, and Table density (Comfortable / Compact).
+   * **Database Backups**: Full JSON export/restore and factory reset engine.
+3. **Real-Time Cross-Device Sync**: Any lead created or updated immediately reflects across all screens without page refreshes using **Supabase Realtime (`postgres_changes`)**.
+4. **Comprehensive Lead Model & Fee Ledger**:
+   * Candidate info, agreed tuition fee, paid amount, and auto-calculated pending balances.
 6. **Admissions Follow-Up Command Center**:
    * Scheduled follow-up dates and action notes.
    * Visual indicators for **Overdue Follow-ups** and **Today's Follow-ups**.
