@@ -1,16 +1,22 @@
 import React, { useMemo } from 'react';
 import { useLeads } from '../../contexts/LeadsContext';
-import { STATUS_OPTIONS, SOURCE_OPTIONS } from '../../lib/constants';
-import { getAllProgramOptions } from '../../lib/programs';
+import { useSettings } from '../../contexts/SettingsContext';
 import { Search, X, RotateCcw, Calendar, Archive } from 'lucide-react';
 import { FollowupFilterType } from '../../types/database';
 
 export const LeadFilters: React.FC = () => {
   const { filterState, setFilterState, stats, leads } = useLeads();
+  const { settings, activePrograms, activeSources } = useSettings();
 
   const availablePrograms = useMemo(() => {
-    return getAllProgramOptions(leads.map((l) => l.interested_program));
-  }, [leads]);
+    const fromLeads = leads.map((l) => l.interested_program).filter(Boolean);
+    return Array.from(new Set([...activePrograms, ...fromLeads]));
+  }, [leads, activePrograms]);
+
+  const availableSources = useMemo(() => {
+    const fromLeads = leads.map((l) => l.source).filter(Boolean);
+    return Array.from(new Set([...activeSources, ...fromLeads]));
+  }, [leads, activeSources]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFilterState((prev) => ({ ...prev, search: e.target.value }));
@@ -108,9 +114,9 @@ export const LeadFilters: React.FC = () => {
             className="w-full py-1.5 px-2.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-500"
           >
             <option value="ALL">All Statuses ({stats.totalLeads})</option>
-            {STATUS_OPTIONS.map((status) => (
-              <option key={status} value={status}>
-                {status}
+            {settings.statuses.map((st) => (
+              <option key={st.key} value={st.key}>
+                {st.label}
               </option>
             ))}
           </select>
@@ -146,7 +152,7 @@ export const LeadFilters: React.FC = () => {
             className="w-full py-1.5 px-2.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-500"
           >
             <option value="ALL">All Sources</option>
-            {SOURCE_OPTIONS.map((source) => (
+            {availableSources.map((source) => (
               <option key={source} value={source}>
                 {source}
               </option>

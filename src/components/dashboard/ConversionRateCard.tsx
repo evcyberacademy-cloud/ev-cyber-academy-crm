@@ -1,10 +1,11 @@
 import React from 'react';
 import { useLeads } from '../../contexts/LeadsContext';
-import { formatCurrency } from '../../lib/utils';
+import { useSettings } from '../../contexts/SettingsContext';
 import { TrendingUp, CheckCircle2, DollarSign, Clock } from 'lucide-react';
 
 export const ConversionRateCard: React.FC = () => {
   const { stats } = useLeads();
+  const { formatCurrency } = useSettings();
   const rate = stats.conversionRate;
 
   // Calculate circular progress dashoffset

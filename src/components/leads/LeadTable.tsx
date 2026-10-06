@@ -25,6 +25,7 @@ import { QuickStatusModal } from './QuickStatusModal';
 import { QuickPaymentModal } from './QuickPaymentModal';
 import { DeleteConfirmModal } from './DeleteConfirmModal';
 import { useLeads } from '../../contexts/LeadsContext';
+import { useSettings } from '../../contexts/SettingsContext';
 
 interface LeadTableProps {
   leads: Lead[];
@@ -40,6 +41,8 @@ export const LeadTable: React.FC<LeadTableProps> = ({ leads, isLoading = false }
     restoreLead,
     deleteLeadPermanently,
   } = useLeads();
+  const { formatCurrency, settings } = useSettings();
+  const isCompact = settings.appearance.density === 'compact';
 
   const [selectedLeadForStatus, setSelectedLeadForStatus] = useState<Lead | null>(null);
   const [selectedLeadForPayment, setSelectedLeadForPayment] = useState<Lead | null>(null);

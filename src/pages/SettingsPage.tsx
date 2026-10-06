@@ -1,140 +1,116 @@
-import React from 'react';
-import { useTheme } from '../contexts/ThemeContext';
+import React, { useState } from 'react';
+import { useSettings } from '../contexts/SettingsContext';
+import { BrandingSettings } from '../components/settings/BrandingSettings';
+import { DashboardSettingsTab } from '../components/settings/DashboardSettingsTab';
+import { ProgramsSettingsTab } from '../components/settings/ProgramsSettingsTab';
+import { SourcesSettingsTab } from '../components/settings/SourcesSettingsTab';
+import { PipelineSettingsTab } from '../components/settings/PipelineSettingsTab';
+import { FollowupSettingsTab } from '../components/settings/FollowupSettingsTab';
+import { AppearanceSettingsTab } from '../components/settings/AppearanceSettingsTab';
 import { BackupManager } from '../components/settings/BackupManager';
+import { SettingsBackupAndReset } from '../components/settings/SettingsBackupAndReset';
 import { ConnectionGuide } from '../components/settings/ConnectionGuide';
-import { PROGRAM_OPTIONS, SOURCE_OPTIONS, STATUS_OPTIONS } from '../lib/constants';
-import { Settings, Moon, Sun, BookOpen, Layers, ShieldCheck, Database } from 'lucide-react';
+import {
+  Settings,
+  Building2,
+  LayoutDashboard,
+  BookOpen,
+  Layers,
+  ShieldCheck,
+  CalendarClock,
+  Sparkles,
+  Database,
+  Sliders,
+} from 'lucide-react';
+
+type SettingsTab =
+  | 'branding'
+  | 'dashboard'
+  | 'programs'
+  | 'sources'
+  | 'pipeline'
+  | 'followup'
+  | 'appearance'
+  | 'database';
 
 export const SettingsPage: React.FC = () => {
-  const { theme, setTheme } = useTheme();
+  const { settings } = useSettings();
+  const [activeTab, setActiveTab] = useState<SettingsTab>('branding');
+
+  const tabs: { id: SettingsTab; label: string; icon: React.ElementType; count?: number }[] = [
+    { id: 'branding', label: 'Organization & Brand', icon: Building2 },
+    { id: 'dashboard', label: 'Dashboard Widgets', icon: LayoutDashboard },
+    { id: 'programs', label: 'Programs & Courses', icon: BookOpen, count: settings.programs.length },
+    { id: 'sources', label: 'Lead Sources', icon: Layers, count: settings.sources.length },
+    { id: 'pipeline', label: 'Pipeline Stages', icon: ShieldCheck, count: settings.statuses.length },
+    { id: 'followup', label: 'Follow-up Rules', icon: CalendarClock },
+    { id: 'appearance', label: 'Theme & Display', icon: Sparkles },
+    { id: 'database', label: 'Database & Cloud', icon: Database },
+  ];
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
+    <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-          <Settings className="w-5 h-5 text-brand-600 dark:text-brand-400" />
-          System Settings & Cloud Infrastructure
+        <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2.5">
+          <div className="p-2 rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400">
+            <Settings className="w-5 h-5" />
+          </div>
+          <span>System Settings & A-Z Customizer</span>
         </h2>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-          Configure application preferences, export/import backups, and manage Supabase Free Tier configuration.
+        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+          Full control center to configure branding, dashboard display, academic offerings, pipeline rules, and cloud backups.
         </p>
       </div>
 
-      {/* 1. Theme Preferences */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-subtle space-y-4">
-        <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-          Visual Interface Theme
-        </h3>
+      {/* Tabs Bar */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 bg-white dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-subtle no-scrollbar">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={() => setTheme('dark')}
-            className={`p-4 rounded-xl border flex items-center space-x-3 text-left transition-all ${
-              theme === 'dark'
-                ? 'border-brand-500 bg-brand-50/40 dark:bg-brand-950/40 ring-1 ring-brand-500'
-                : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40'
-            }`}
-          >
-            <div className="p-2 rounded-lg bg-slate-800 text-amber-400">
-              <Sun className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="text-sm font-bold text-slate-900 dark:text-white block">
-                Dark Mode (Recommended)
-              </span>
-              <span className="text-xs text-slate-500 dark:text-slate-400">
-                Sleek cybersecurity operations theme with high contrast
-              </span>
-            </div>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setTheme('light')}
-            className={`p-4 rounded-xl border flex items-center space-x-3 text-left transition-all ${
-              theme === 'light'
-                ? 'border-brand-500 bg-brand-50/40 dark:bg-brand-950/40 ring-1 ring-brand-500'
-                : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40'
-            }`}
-          >
-            <div className="p-2 rounded-lg bg-slate-100 text-slate-700">
-              <Moon className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="text-sm font-bold text-slate-900 dark:text-white block">
-                Light Mode
-              </span>
-              <span className="text-xs text-slate-500 dark:text-slate-400">
-                Clean daylight palette with crisp borders
-              </span>
-            </div>
-          </button>
-        </div>
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center space-x-2 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex-shrink-0 ${
+                isActive
+                  ? 'bg-brand-600 text-white shadow-md shadow-brand-500/25'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              <span>{tab.label}</span>
+              {tab.count !== undefined && (
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                    isActive ? 'bg-white/25 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                  }`}
+                >
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
-      {/* 2. Database Backup & Restore Component */}
-      <BackupManager />
-
-      {/* 3. Supabase Cloud Connection & Zero Cost Guide */}
-      <ConnectionGuide />
-
-      {/* 4. Academy Program & Source Reference */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-subtle space-y-4">
-        <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-          Standardized Taxonomy Configuration
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-          {/* Programs */}
-          <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/40 border border-slate-100 dark:border-slate-800 space-y-2">
-            <div className="flex items-center space-x-2 font-bold text-slate-900 dark:text-white">
-              <BookOpen className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-              <span>Standard Programs ({PROGRAM_OPTIONS.length})</span>
-            </div>
-            <ul className="space-y-1 text-slate-600 dark:text-slate-400 pl-1">
-              {PROGRAM_OPTIONS.map((p) => (
-                <li key={p} className="flex items-center space-x-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-brand-500" />
-                  <span>{p}</span>
-                </li>
-              ))}
-            </ul>
+      {/* Tab Panels */}
+      <div className="transition-all duration-200">
+        {activeTab === 'branding' && <BrandingSettings />}
+        {activeTab === 'dashboard' && <DashboardSettingsTab />}
+        {activeTab === 'programs' && <ProgramsSettingsTab />}
+        {activeTab === 'sources' && <SourcesSettingsTab />}
+        {activeTab === 'pipeline' && <PipelineSettingsTab />}
+        {activeTab === 'followup' && <FollowupSettingsTab />}
+        {activeTab === 'appearance' && <AppearanceSettingsTab />}
+        {activeTab === 'database' && (
+          <div className="space-y-6">
+            <BackupManager />
+            <SettingsBackupAndReset />
+            <ConnectionGuide />
           </div>
-
-          {/* Sources */}
-          <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/40 border border-slate-100 dark:border-slate-800 space-y-2">
-            <div className="flex items-center space-x-2 font-bold text-slate-900 dark:text-white">
-              <Layers className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-              <span>Acquisition Sources ({SOURCE_OPTIONS.length})</span>
-            </div>
-            <ul className="space-y-1 text-slate-600 dark:text-slate-400 pl-1">
-              {SOURCE_OPTIONS.map((s) => (
-                <li key={s} className="flex items-center space-x-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-                  <span>{s}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Statuses */}
-          <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/40 border border-slate-100 dark:border-slate-800 space-y-2">
-            <div className="flex items-center space-x-2 font-bold text-slate-900 dark:text-white">
-              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <span>Pipeline Stages ({STATUS_OPTIONS.length})</span>
-            </div>
-            <ul className="space-y-1 text-slate-600 dark:text-slate-400 pl-1">
-              {STATUS_OPTIONS.map((st) => (
-                <li key={st} className="flex items-center space-x-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  <span>{st}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
+import { SettingsProvider } from './contexts/SettingsContext';
 import { LeadsProvider } from './contexts/LeadsContext';
 import { ProtectedRoute } from './components/layout/ProtectedRoute';
 import { Layout } from './components/layout/Layout';
@@ -20,7 +21,8 @@ export const App: React.FC = () => {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <LeadsProvider>
+        <SettingsProvider>
+          <LeadsProvider>
           <BrowserRouter>
             <Routes>
               {/* Public Route */}
@@ -100,7 +102,8 @@ export const App: React.FC = () => {
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </BrowserRouter>
-        </LeadsProvider>
+          </LeadsProvider>
+        </SettingsProvider>
       </AuthProvider>
     </ThemeProvider>
   );

@@ -1,12 +1,14 @@
 import React from 'react';
 import { useLeads } from '../../contexts/LeadsContext';
+import { useSettings } from '../../contexts/SettingsContext';
 import { Link } from 'react-router-dom';
 import { Users, ArrowRight, Clock, ChevronRight } from 'lucide-react';
-import { formatCurrency, formatRelativeTime } from '../../lib/utils';
+import { formatRelativeTime } from '../../lib/utils';
 import { Badge } from '../common/Badge';
 
 export const RecentLeads: React.FC = () => {
   const { leads } = useLeads();
+  const { formatCurrency } = useSettings();
 
   const recent = leads
     .filter((l) => !l.is_archived)

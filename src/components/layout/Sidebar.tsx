@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLeads } from '../../contexts/LeadsContext';
+import { useSettings } from '../../contexts/SettingsContext';
 import { cn } from '../../lib/utils';
 
 interface SidebarProps {
@@ -23,6 +24,7 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { signOut, user } = useAuth();
   const { stats } = useLeads();
+  const { settings } = useSettings();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -95,12 +97,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform">
               <Shield className="w-5 h-5 stroke-[2.2]" />
             </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-1">
-                EV CYBER <span className="text-brand-500 dark:text-brand-400 font-semibold text-xs px-1 py-0.5 rounded bg-brand-50 dark:bg-brand-950/80">CRM</span>
+            <div className="flex flex-col min-w-0">
+              <span className="text-sm font-bold tracking-tight text-slate-900 dark:text-white truncate">
+                {settings.company.name}
               </span>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium tracking-wider uppercase">
-                Academy Lead Hub
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium tracking-wider uppercase truncate">
+                {settings.company.tagline || 'Lead Command Center'}
               </span>
             </div>
           </NavLink>

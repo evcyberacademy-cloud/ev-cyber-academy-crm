@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { LeadFormData, Lead, LeadStatus } from '../../types/database';
-import { STATUS_OPTIONS, SOURCE_OPTIONS } from '../../lib/constants';
-import { getAllProgramOptions, saveCustomProgram } from '../../lib/programs';
 import { useLeads } from '../../contexts/LeadsContext';
+import { useSettings } from '../../contexts/SettingsContext';
 import { Input } from '../common/Input';
 import { Select } from '../common/Select';
 import { Textarea } from '../common/Textarea';
@@ -15,11 +14,11 @@ import {
   Calendar,
   Save,
   Plus,
-  CheckCircle2,
   Sparkles,
+  IndianRupee,
+  DollarSign,
   Layers,
-  Activity,
-  FileText,
+  ShieldCheck,
 } from 'lucide-react';
 
 interface LeadFormProps {
@@ -38,43 +37,45 @@ export const LeadForm: React.FC<LeadFormProps> = ({
   buttonText = 'Save Lead',
 }) => {
   const { leads } = useLeads();
+  const { settings, activePrograms, activeSources, addProgram, formatCurrency } = useSettings();
 
-  // Extract all existing program names from leads in DB
-  const existingLeadPrograms = leads.map((l) => l.interested_program);
-
-  const [programsList, setProgramsList] = useState<string[]>(() =>
-    getAllProgramOptions(existingLeadPrograms)
+  // Combine active programs from settings + any existing lead programs
+  const combinedPrograms = Array.from(
+    new Set([...activePrograms, ...leads.map((l) => l.interested_program).filter(Boolean)])
   );
 
-  const [formData, setFormData] = useState<LeadFormData>({
-    full_name: '',
-    phone: '',
-    interested_program: 'LFHP',
-    status: 'New',
-    source: 'Website',
-    next_followup_date: '',
-    notes: '',
+  const combinedSources = Array.from(
+    new Set([...activeSources, ...leads.map((l) => l.source).filter(Boolean)])
+  );
+
+  const [formData, setFormData] = useState<LeadFormData>(() => {
+    const defaultProg = combinedPrograms[0] || 'LFHP';
+    const matchedProg = settings.programs.find((p) => p.name === defaultProg);
+    const defaultFee = matchedProg ? matchedProg.defaultFee : 0;
+
+    return {
+      full_name: '',
+      phone: '',
+      interested_program: defaultProg,
+      status: 'New',
+      source: combinedSources[0] || 'Website',
+      next_followup_date: '',
+      notes: '',
+      total_amount: defaultFee,
+      paid_amount: 0,
+    };
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [addProgramModalOpen, setAddProgramModalOpen] = useState(false);
   const [newProgramName, setNewProgramName] = useState('');
+  const [newProgramFee, setNewProgramFee] = useState<number | string>(0);
   const [programError, setProgramError] = useState('');
-
-  // Update programs list if leads change
-  useEffect(() => {
-    setProgramsList(getAllProgramOptions(existingLeadPrograms));
-  }, [leads.length]);
 
   // Load initial data if editing
   useEffect(() => {
     if (initialData) {
-      const prog = initialData.interested_program || 'LFHP';
-      // Ensure custom program is in list
-      if (!programsList.includes(prog)) {
-        setProgramsList((prev) => [...prev, prog]);
-      }
-
+      const prog = initialData.interested_program || combinedPrograms[0] || 'LFHP';
       setFormData({
         full_name: initialData.full_name || '',
         phone: initialData.phone || '',
@@ -85,7 +86,6 @@ export const LeadForm: React.FC<LeadFormProps> = ({
           ? initialData.next_followup_date.split('T')[0]
           : '',
         notes: initialData.notes || '',
-        // preserve existing extra fields if editing
         email: initialData.email || '',
         total_amount: initialData.total_amount || 0,
         paid_amount: initialData.paid_amount || 0,
@@ -95,6 +95,19 @@ export const LeadForm: React.FC<LeadFormProps> = ({
     }
   }, [initialData]);
 
+  const handleProgramChange = (selectedProg: string) => {
+    const matched = settings.programs.find((p) => p.name === selectedProg);
+    setFormData((prev) => ({
+      ...prev,
+      interested_program: selectedProg,
+      // Auto-set fee if creating new lead and current total is 0 or matches previous default
+      total_amount:
+        !initialData && (prev.total_amount === 0 || prev.total_amount === undefined) && matched
+          ? matched.defaultFee
+          : prev.total_amount,
+    }));
+  };
+
   const handleAddNewProgram = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = newProgramName.trim();
@@ -103,14 +116,21 @@ export const LeadForm: React.FC<LeadFormProps> = ({
       return;
     }
 
-    // Save program permanently
-    const updated = saveCustomProgram(trimmed);
-    const combined = Array.from(new Set([...programsList, ...updated, trimmed]));
-    setProgramsList(combined);
+    const feeNum = Number(newProgramFee) || 0;
+    addProgram({
+      name: trimmed,
+      defaultFee: feeNum,
+      isActive: true,
+    });
 
-    // Auto-select the newly added program
-    setFormData((prev) => ({ ...prev, interested_program: trimmed }));
+    setFormData((prev) => ({
+      ...prev,
+      interested_program: trimmed,
+      total_amount: !initialData ? feeNum : prev.total_amount,
+    }));
+
     setNewProgramName('');
+    setNewProgramFee(0);
     setProgramError('');
     setAddProgramModalOpen(false);
   };
@@ -141,17 +161,17 @@ export const LeadForm: React.FC<LeadFormProps> = ({
     await onSubmit(formData);
   };
 
-  const programOptions = programsList.map((p) => ({
+  const programOptions = combinedPrograms.map((p) => ({
     value: p,
     label: p,
   }));
 
-  const statusOptions = STATUS_OPTIONS.map((st) => ({
-    value: st,
-    label: st,
+  const statusOptions = settings.statuses.map((st) => ({
+    value: st.key,
+    label: st.label,
   }));
 
-  const sourceOptions = SOURCE_OPTIONS.map((src) => ({
+  const sourceOptions = combinedSources.map((src) => ({
     value: src,
     label: src,
   }));
@@ -196,7 +216,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
             <div className="flex items-center justify-between">
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                 <BookOpen className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
-                Interested Program *
+                Interested Program / Course *
               </label>
               <button
                 type="button"
@@ -204,16 +224,14 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                 className="text-xs font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 flex items-center gap-1 hover:underline"
               >
                 <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-                <span>Add New Program</span>
+                <span>Add New Course</span>
               </button>
             </div>
 
             <Select
               options={programOptions}
               value={formData.interested_program}
-              onChange={(e) =>
-                setFormData({ ...formData, interested_program: e.target.value })
-              }
+              onChange={(e) => handleProgramChange(e.target.value)}
               className="font-medium"
             />
           </div>
@@ -230,15 +248,27 @@ export const LeadForm: React.FC<LeadFormProps> = ({
             />
 
             <Select
-              label="Lead Source *"
+              label="Lead Acquisition Source *"
               options={sourceOptions}
               value={formData.source}
               onChange={(e) => setFormData({ ...formData, source: e.target.value })}
             />
           </div>
 
-          {/* Row 4: Next Follow-up Date */}
+          {/* Row 4: Fee & Follow-up Date */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label={`Agreed Tuition Fee (${settings.company.currencySymbol})`}
+              type="number"
+              min="0"
+              placeholder="15000"
+              value={formData.total_amount || 0}
+              onChange={(e) =>
+                setFormData({ ...formData, total_amount: Number(e.target.value) || 0 })
+              }
+              leftIcon={<span className="text-xs font-bold text-slate-400">{settings.company.currencySymbol}</span>}
+            />
+
             <Input
               label="Next Follow-up Date (Optional)"
               type="date"
@@ -248,13 +278,9 @@ export const LeadForm: React.FC<LeadFormProps> = ({
               }
               leftIcon={<Calendar className="w-4 h-4" />}
             />
-
-            <div className="hidden sm:flex items-center text-xs text-slate-400 dark:text-slate-500 pt-6">
-              <span>Follow-up reminders will appear automatically in the Command Center.</span>
-            </div>
           </div>
 
-          {/* Row 5: Short Note */}
+          {/* Row 5: Remarks / Notes */}
           <Textarea
             label="Short Note / Remarks (Optional)"
             placeholder="e.g. Inquired about weekend batch syllabus, interested in malware analysis module..."
@@ -298,14 +324,14 @@ export const LeadForm: React.FC<LeadFormProps> = ({
           setNewProgramName('');
           setProgramError('');
         }}
-        title="Add New Course / Workshop Program"
-        description="Newly created programs will immediately be available in the dropdown for all leads."
+        title="Add New Academic Program / Course"
+        description="Newly created programs will immediately be saved to Settings and available across the entire CRM."
         maxWidth="sm"
       >
         <form onSubmit={handleAddNewProgram} className="space-y-4">
           <Input
-            label="Program Name *"
-            placeholder="e.g. Android Hacking Workshop"
+            label="Program Title *"
+            placeholder="e.g. Cloud Security & DevSecOps Bootcamp"
             value={newProgramName}
             onChange={(e) => {
               setNewProgramName(e.target.value);
@@ -315,6 +341,15 @@ export const LeadForm: React.FC<LeadFormProps> = ({
             autoFocus
             required
             leftIcon={<Sparkles className="w-4 h-4 text-brand-500" />}
+          />
+
+          <Input
+            label={`Default Fee / Tuition (${settings.company.currencySymbol})`}
+            type="number"
+            min="0"
+            placeholder="15000"
+            value={newProgramFee}
+            onChange={(e) => setNewProgramFee(e.target.value)}
           />
 
           <div className="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100 dark:border-slate-800">
@@ -336,7 +371,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
               size="sm"
               leftIcon={<Plus className="w-3.5 h-3.5" />}
             >
-              Add Program to Dropdown
+              Add Program
             </Button>
           </div>
         </form>

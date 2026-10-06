@@ -25,6 +25,7 @@ import { QuickStatusModal } from './QuickStatusModal';
 import { QuickPaymentModal } from './QuickPaymentModal';
 import { DeleteConfirmModal } from './DeleteConfirmModal';
 import { useLeads } from '../../contexts/LeadsContext';
+import { useSettings } from '../../contexts/SettingsContext';
 
 interface LeadCardProps {
   lead: Lead;
@@ -38,6 +39,7 @@ export const LeadCard: React.FC<LeadCardProps> = ({ lead }) => {
     restoreLead,
     deleteLeadPermanently,
   } = useLeads();
+  const { formatCurrency } = useSettings();
 
   const [statusModalOpen, setStatusModalOpen] = useState(false);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);

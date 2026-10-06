@@ -3,7 +3,8 @@ import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 import { Input } from '../common/Input';
 import { Lead } from '../../types/database';
-import { calculatePending, formatCurrency } from '../../lib/utils';
+import { calculatePending } from '../../lib/utils';
+import { useSettings } from '../../contexts/SettingsContext';
 import { IndianRupee, CheckCircle2 } from 'lucide-react';
 
 interface QuickPaymentModalProps {
@@ -19,6 +20,7 @@ export const QuickPaymentModal: React.FC<QuickPaymentModalProps> = ({
   lead,
   onUpdatePayment,
 }) => {
+  const { formatCurrency, settings } = useSettings();
   const [totalAmount, setTotalAmount] = useState<number>(0);
   const [paidAmount, setPaidAmount] = useState<number>(0);
   const [paymentNote, setPaymentNote] = useState<string>('');

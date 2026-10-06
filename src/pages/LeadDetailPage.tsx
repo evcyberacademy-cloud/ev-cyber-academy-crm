@@ -36,6 +36,7 @@ import {
   User,
 } from 'lucide-react';
 import { LeadFormData } from '../types/database';
+import { useSettings } from '../contexts/SettingsContext';
 
 export const LeadDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -51,6 +52,7 @@ export const LeadDetailPage: React.FC = () => {
     deleteLeadPermanently,
     loading: leadsLoading,
   } = useLeads();
+  const { formatCurrency, settings } = useSettings();
 
   const isEditMode = searchParams.get('edit') === 'true';
 

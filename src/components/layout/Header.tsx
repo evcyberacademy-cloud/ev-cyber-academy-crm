@@ -5,6 +5,7 @@ import { ThemeToggle } from '../common/ThemeToggle';
 import { RealtimeIndicator } from '../common/DemoBanner';
 import { Button } from '../common/Button';
 import { useLeads } from '../../contexts/LeadsContext';
+import { useSettings } from '../../contexts/SettingsContext';
 
 interface HeaderProps {
   onOpenSidebar: () => void;
@@ -19,6 +20,7 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const navigate = useNavigate();
   const { filterState, setFilterState, refreshLeads, loading } = useLeads();
+  const { settings } = useSettings();
 
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between h-16 px-4 md:px-6 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors">
@@ -48,7 +50,7 @@ export const Header: React.FC<HeaderProps> = ({
           ) : (
             <div className="flex items-center space-x-2">
               <span className="font-bold text-slate-900 dark:text-white text-base">
-                EV Cyber Academy
+                {settings.company.name}
               </span>
               <span className="text-xs text-slate-400 dark:text-slate-500">| Lead System</span>
             </div>
